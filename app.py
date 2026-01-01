@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import os
 import replicate
 import fal_client
@@ -7,7 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'super_secret_key_123') # Basic session security
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 # 10MB Limit
+
+# Credits Config
+INITIAL_CREDITS = 3
+COST_PER_GEN = 1
+REWARD_AMOUNT = 5
 
 # Allowed extensions
 ALLOWED_EXTENSIONS = {'mp3', 'wav', 'ogg', 'm4a'}
@@ -20,11 +26,26 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
+    if 'credits' not in session:
+        session['credits'] = INITIAL_CREDITS
     return render_template('index.html')
+
+@app.route('/credits', methods=['GET'])
+def get_credits():
+    return jsonify({'credits': session.get('credits', 0)})
+
+@app.route('/reward', methods=['POST'])
+def reward_credits():
+    # In a real app, verify the ad callback signature here
+    session['credits'] = session.get('credits', 0) + REWARD_AMOUNT
+    return jsonify({'credits': session['credits'], 'message': f'Added {REWARD_AMOUNT} credits!'})
 
 @app.route('/generate', methods=['POST'])
 def generate_music():
     try:
+        if session.get('credits', 0) < COST_PER_GEN:
+             return jsonify({'error': 'Insufficient credits. Watch an ad to get more!'}), 402
+
         data = request.json
         prompt = data.get('prompt')
         duration = int(data.get('duration', 8)) # seconds
@@ -42,7 +63,8 @@ def generate_music():
         )
         
         # Output is usually a URL to the audio file
-        return jsonify({'audio_url': output})
+        session['credits'] -= COST_PER_GEN
+        return jsonify({'audio_url': output, 'credits': session['credits']})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -50,6 +72,9 @@ def generate_music():
 @app.route('/remix', methods=['POST'])
 def remix_music():
     try:
+        if session.get('credits', 0) < COST_PER_GEN:
+             return jsonify({'error': 'Insufficient credits. Watch an ad to get more!'}), 402
+
         if 'audio' not in request.files:
             return jsonify({'error': 'No audio file uploaded'}), 400
         
@@ -86,7 +111,8 @@ def remix_music():
         except PermissionError:
             pass # Windows sometimes holds onto files; ignore if we can't delete immediately
 
-        return jsonify({'audio_url': output})
+        session['credits'] -= COST_PER_GEN
+        return jsonify({'audio_url': output, 'credits': session['credits']})
 
     except Exception as e:
         # Cleanup in case of error
@@ -100,6 +126,9 @@ def remix_music():
 @app.route('/video', methods=['POST'])
 def generate_video():
     try:
+        if session.get('credits', 0) < COST_PER_GEN:
+             return jsonify({'error': 'Insufficient credits. Watch an ad to get more!'}), 402
+
         data = request.json
         prompt = data.get('prompt')
         
@@ -117,7 +146,8 @@ def generate_video():
         result = handler.get()
         video_url = result['video']['url']
         
-        return jsonify({'video_url': video_url})
+        session['credits'] -= COST_PER_GEN
+        return jsonify({'video_url': video_url, 'credits': session['credits']})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

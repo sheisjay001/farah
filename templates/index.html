@@ -6,6 +6,7 @@
     <title>Farah | AI Music & Video Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/wavesurfer.js"></script>
+    <!-- <script type="text/javascript" src="https://cdn.applixir.com/applixir.sdk3.0m.js"></script> -->
     <style>
         :root {
             --bg-dark: #0a0a0f;
@@ -180,7 +181,46 @@
 
     <nav>
         <div class="logo">FARAH</div>
+        <div style="position: absolute; right: 20px; top: 20px; color: var(--primary);">
+            💎 Credits: <span id="credit-count">...</span> 
+            <button onclick="showRewardAd()" style="background:var(--accent); border:none; color:white; border-radius:15px; padding:5px 10px; cursor:pointer; font-size:0.8rem; margin-left:10px;">+ Get More</button>
+        </div>
     </nav>
+    
+    <!-- Simulated Ad Overlay -->
+    <div id="simulated-ad" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:3000; background:rgba(0,0,0,0.98); display:none; justify-content:center; align-items:center; flex-direction:column;">
+        <div style="background:#000; color:white; padding:0; border-radius:10px; text-align:center; max-width:800px; width:90%; border: 2px solid #333; overflow:hidden; box-shadow:0 0 50px rgba(0,0,0,0.8); position:relative;">
+            <!-- Fake Video Player Header -->
+            <div style="background:#222; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.9rem; color:#aaa;">Sponsored Content</span>
+                <span style="font-size:0.9rem; color:#fff; font-weight:bold;">Ad ends in: <span id="ad-timer" style="color:var(--primary)">10</span>s</span>
+            </div>
+            
+            <!-- Fake Video Content Area -->
+            <div style="height:400px; display:flex; align-items:center; justify-content:center; background: radial-gradient(circle, #2a2a2a, #000); position:relative;">
+                <div style="text-align:center;">
+                    <div style="font-size:4rem; margin-bottom:20px;">🎬</div>
+                    <h2 style="margin:0;">Amazing Product</h2>
+                    <p style="color:#888;">This is a placeholder for a real video ad.</p>
+                    <p style="color:#d4af37; font-size:0.8rem; margin-top:20px;">Refreshing the page will RESTART the ad!</p>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div style="position:absolute; bottom:0; left:0; width:100%; height:4px; background:#333;">
+                    <div id="ad-progress" style="width:0%; height:100%; background:var(--primary); transition:width 1s linear;"></div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div style="padding:20px; background:#111; display:flex; justify-content:space-between; align-items:center;">
+                <div style="text-align:left;">
+                    <div style="font-weight:bold; font-size:1.1rem;">Support Farah Studio</div>
+                    <div style="font-size:0.8rem; color:#666;">Get free credits by watching this video.</div>
+                </div>
+                <button style="background:var(--primary); color:black; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:not-allowed; opacity:0.5;">Learn More</button>
+            </div>
+        </div>
+    </div>
 
     <div class="container">
         
@@ -242,6 +282,77 @@
 
     <script>
         let wavesurfer;
+        
+        // --- AppLixir & Credit Logic ---
+        
+        async function updateCredits() {
+            try {
+                const res = await fetch('/credits');
+                const data = await res.json();
+                document.getElementById('credit-count').innerText = data.credits;
+            } catch(e) { console.error(e); }
+        }
+
+        // Initialize credits on load
+        updateCredits();
+        
+        // --- Anti-Evasion Logic ---
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('ad_active') === 'true') {
+                console.log("Ad evasion detected! Restarting ad...");
+                showRewardAd(true); // Restart with penalty
+            }
+        });
+
+        function showRewardAd(isRestart = false) {
+            // SIMULATED AD MODE
+            const adOverlay = document.getElementById('simulated-ad');
+            const timerEl = document.getElementById('ad-timer');
+            const progressEl = document.getElementById('ad-progress');
+            
+            // Set persistence flag
+            localStorage.setItem('ad_active', 'true');
+            
+            let timeLeft = 10; // 10 seconds duration
+            const totalTime = 10;
+            
+            adOverlay.style.display = 'flex';
+            timerEl.innerText = timeLeft;
+            progressEl.style.width = '0%';
+            
+            if(isRestart) {
+                alert("Ad Interrupted! You must watch the full ad to get credits.");
+            }
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                
+                // Update progress bar
+                const percentage = ((totalTime - timeLeft) / totalTime) * 100;
+                progressEl.style.width = percentage + '%';
+
+                if(timeLeft <= 0) {
+                    clearInterval(interval);
+                    adOverlay.style.display = 'none';
+                    localStorage.removeItem('ad_active'); // Clear flag
+                    adStatusCallback('ad-watched');
+                }
+            }, 1000);
+        }
+
+        function adStatusCallback(status) {
+            console.log('Ad Status:', status);
+            if (status === 'ad-watched' || status === 'sys-closing') {
+                 // Reward user
+                 fetch('/reward', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        updateCredits();
+                    });
+            }
+        }
 
         // Initialize WaveSurfer
         function initWaveSurfer() {
@@ -318,9 +429,17 @@
                 const data = await res.json();
 
                 if(data.error) {
-                    alert(data.error);
+                    if (data.error.includes("Insufficient credits")) {
+                        if(confirm("Insufficient credits! Watch an ad to get +5 credits?")) {
+                            showRewardAd();
+                        }
+                    } else {
+                        alert(data.error);
+                    }
                 } else {
                     // Success
+                    if(data.credits !== undefined) document.getElementById('credit-count').innerText = data.credits;
+                    
                     document.getElementById('result').style.display = 'block';
                     initWaveSurfer();
                     const container = document.getElementById('media-container');
