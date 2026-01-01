@@ -4,22 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Farah | AI Music & Video Studio</title>
+    <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/wavesurfer.js"></script>
-    <!-- <script type="text/javascript" src="https://cdn.applixir.com/applixir.sdk3.0m.js"></script> -->
+    <!-- Monetag Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('Monetag Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Monetag Service Worker registration failed:', error);
+                });
+        }
+    </script>
     <style>
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --primary: #d4af37; /* Gold */
-            --accent: #8a2be2;  /* Violet */
-            --text: #f0f0f0;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --bg-dark: #050505;
+            --bg-deep: #0b0b14;
+            --bg-card: rgba(18, 18, 28, 0.6);
+            --primary: #00f0ff; /* Electric Cyan */
+            --accent: #b026ff;  /* Neon Purple */
+            --gold: #ffd700;
+            --text: #ffffff;
+            --text-dim: #a0a0b0;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --glass-shine: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at top left, #1a0b2e, var(--bg-dark));
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(176, 38, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.1) 0%, transparent 40%);
             color: var(--text);
             margin: 0;
             padding: 0;
@@ -34,31 +53,49 @@
             width: 100%;
             padding: 20px 0;
             text-align: center;
-            background: rgba(10, 10, 15, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(20px);
             border-bottom: var(--glass-border);
             position: sticky;
             top: 0;
             z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 5%;
+            padding-right: 5%;
+            box-sizing: border-box;
         }
 
         .logo {
-            font-size: 2rem;
-            font-weight: 600;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff, var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+        }
+
+        .credits-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: var(--glass-border);
         }
 
         /* Main Layout */
         .container {
             width: 90%;
-            max-width: 900px;
+            max-width: 1000px;
             margin-top: 40px;
             display: grid;
             gap: 30px;
             animation: fadeIn 0.8s ease;
+            padding-bottom: 50px;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -66,78 +103,97 @@
         /* Glass Cards */
         .glass-panel {
             background: var(--bg-card);
-            backdrop-filter: blur(16px);
+            background-image: var(--glass-shine);
+            backdrop-filter: blur(24px);
             border: var(--glass-border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
         }
 
         /* Tabs */
         .tabs {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px;
+            border-radius: 40px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            border: var(--glass-border);
         }
 
         .tab-btn {
             background: transparent;
-            color: #888;
-            border: 1px solid #333;
-            padding: 12px 25px;
+            color: var(--text-dim);
+            border: none;
+            padding: 12px 30px;
             border-radius: 30px;
             cursor: pointer;
             font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.3s;
+            font-weight: 500;
         }
 
-        .tab-btn:hover { border-color: var(--primary); color: var(--text); }
+        .tab-btn:hover { color: var(--text); }
         
         .tab-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #000;
-            border: none;
+            background: var(--bg-deep);
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             font-weight: 600;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
         /* Inputs */
         textarea, input[type="text"] {
             width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid #333;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
             color: white;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 1.1rem;
             margin-bottom: 20px;
             box-sizing: border-box;
             font-family: 'Outfit', sans-serif;
             transition: 0.3s;
+            resize: vertical;
         }
 
-        textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(138, 43, 226, 0.2); }
+        textarea:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1); 
+            background: rgba(0,0,0,0.6);
+        }
         
         .file-upload {
-            border: 2px dashed #444;
-            padding: 30px;
+            border: 2px dashed rgba(255,255,255,0.15);
+            padding: 40px;
             text-align: center;
-            border-radius: 12px;
+            border-radius: 16px;
             margin-bottom: 20px;
             cursor: pointer;
             transition: 0.3s;
+            background: rgba(255,255,255,0.02);
         }
-        .file-upload:hover { border-color: var(--primary); background: rgba(255,255,255,0.02); }
+        .file-upload:hover { 
+            border-color: var(--primary); 
+            background: rgba(0, 240, 255, 0.05); 
+        }
 
         /* Action Button */
         button.action-btn {
-            background: var(--text);
-            color: #000;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
             border: none;
-            padding: 16px 40px;
-            font-size: 1.2rem;
+            padding: 18px 40px;
+            font-size: 1.1rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
@@ -147,14 +203,47 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(176, 38, 255, 0.3);
         }
 
         button.action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+            box-shadow: 0 15px 40px rgba(176, 38, 255, 0.5);
+            filter: brightness(1.1);
         }
 
-        button.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.action-btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            filter: grayscale(1); 
+        }
+
+        /* Library List */
+        .library-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .library-item:hover { background: rgba(255,255,255,0.06); }
+        .library-meta { display: flex; flex-direction: column; gap: 4px; }
+        .library-date { font-size: 0.75rem; color: #666; }
+        .library-actions button {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .library-actions button:hover { background: white; color: black; }
 
         /* Visualization & Results */
         #result { display: none; margin-top: 30px; }
@@ -162,28 +251,29 @@
         #waveform {
             width: 100%;
             height: 128px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
             margin-bottom: 20px;
+            overflow: hidden;
         }
 
-        video { width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        video { width: 100%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #333; }
 
         .mode-section { display: none; }
         .mode-section.active { display: block; animation: slideUp 0.4s ease; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .footer { margin-top: auto; padding: 20px; color: #555; font-size: 0.9rem; }
+        .footer { margin-top: auto; padding: 30px; color: var(--text-dim); font-size: 0.85rem; text-align: center; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo">FARAH</div>
-        <div style="position: absolute; right: 20px; top: 20px; color: var(--primary);">
-            💎 Credits: <span id="credit-count">...</span> 
-            <button onclick="showRewardAd()" style="background:var(--accent); border:none; color:white; border-radius:15px; padding:5px 10px; cursor:pointer; font-size:0.8rem; margin-left:10px;">+ Get More</button>
+        <div class="logo">FARAH STUDIO</div>
+        <div class="credits-display">
+            <span style="color: var(--gold); font-weight: bold;">💎 <span id="credit-count">...</span></span> 
+            <button onclick="showRewardAd()" style="background:linear-gradient(90deg, var(--accent), var(--primary)); border:none; color:white; border-radius:15px; padding:6px 14px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:0.2s;">+ Free Credits</button>
         </div>
     </nav>
     
@@ -229,6 +319,7 @@
                 <button class="tab-btn active" onclick="switchTab('create')">✨ Create</button>
                 <button class="tab-btn" onclick="switchTab('remix')">🎧 Remix</button>
                 <button class="tab-btn" onclick="switchTab('video')">🎬 Video</button>
+                <button class="tab-btn" onclick="switchTab('library')">📚 Library</button>
             </div>
 
             <!-- CREATE -->
@@ -257,6 +348,18 @@
                 </div>
                 <textarea id="video-prompt" placeholder="Describe the visual vibe... (e.g., 'Golden particles floating in a void, 4k loop')"></textarea>
                 <button class="action-btn" onclick="generateVideo()">Generate Visuals</button>
+            </div>
+
+            <!-- LIBRARY -->
+            <div id="library-mode" class="mode-section">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h3 style="margin:0;">My Creations</h3>
+                    <p style="color:#666; font-size:0.9rem;">Your session history is saved locally.</p>
+                </div>
+                <div id="library-list">
+                    <!-- Items injected via JS -->
+                    <p style="text-align:center; color:#444;">No creations yet. Start dreaming!</p>
+                </div>
             </div>
         </div>
 
@@ -383,9 +486,58 @@
             if(mode === 'create') buttons[0].classList.add('active');
             if(mode === 'remix') buttons[1].classList.add('active');
             if(mode === 'video') buttons[2].classList.add('active');
+            if(mode === 'library') {
+                buttons[3].classList.add('active');
+                loadLibrary();
+            }
 
             document.getElementById(mode + '-mode').classList.add('active');
             document.getElementById('result').style.display = 'none';
+        }
+
+        // --- Library Logic ---
+        function addToLibrary(item) {
+            const lib = JSON.parse(localStorage.getItem('farah_library') || '[]');
+            lib.unshift(item); // Add to top
+            localStorage.setItem('farah_library', JSON.stringify(lib));
+        }
+
+        function loadLibrary() {
+            const lib = JSON.parse(localStorage.getItem('farah_library') || '[]');
+            const listEl = document.getElementById('library-list');
+            listEl.innerHTML = '';
+
+            if(lib.length === 0) {
+                listEl.innerHTML = '<p style="text-align:center; color:#444;">No creations yet. Start dreaming!</p>';
+                return;
+            }
+
+            lib.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'library-item';
+                
+                let icon = item.type === 'video' ? '🎬' : '🎵';
+                let action = item.type === 'video' ? 'Watch' : 'Play';
+                
+                el.innerHTML = `
+                    <div class="library-meta">
+                        <div style="font-weight:bold; color:white;">${icon} ${item.prompt.substring(0, 30)}...</div>
+                        <div class="library-date">${new Date(item.date).toLocaleString()}</div>
+                    </div>
+                    <div class="library-actions">
+                        <button onclick="window.open('${item.url}', '_blank')">${action}</button>
+                        <button onclick="deleteLibItem(${index})" style="border-color:#ff4444; color:#ff4444;">✕</button>
+                    </div>
+                `;
+                listEl.appendChild(el);
+            });
+        }
+
+        function deleteLibItem(index) {
+            const lib = JSON.parse(localStorage.getItem('farah_library') || '[]');
+            lib.splice(index, 1);
+            localStorage.setItem('farah_library', JSON.stringify(lib));
+            loadLibrary();
         }
 
         async function generateMusic(mode) { handleGeneration(mode, false); }
@@ -445,10 +597,13 @@
                     const container = document.getElementById('media-container');
                     container.innerHTML = '';
 
+                    let finalUrl = '';
+
                     if(isVideo) {
                         // Video Logic
+                        finalUrl = data.video_url;
                         const video = document.createElement('video');
-                        video.src = data.video_url;
+                        video.src = finalUrl;
                         video.loop = true;
                         video.muted = true;
                         
@@ -462,12 +617,21 @@
                         wavesurfer.on('pause', () => video.pause());
                         
                         container.appendChild(video);
-                        document.getElementById('downloadLink').href = data.video_url;
+                        document.getElementById('downloadLink').href = finalUrl;
                     } else {
                         // Audio Logic
-                        wavesurfer.load(data.audio_url);
-                        document.getElementById('downloadLink').href = data.audio_url;
+                        finalUrl = data.audio_url;
+                        wavesurfer.load(finalUrl);
+                        document.getElementById('downloadLink').href = finalUrl;
                     }
+
+                    // Save to Library
+                    addToLibrary({
+                        type: isVideo ? 'video' : 'music',
+                        url: finalUrl,
+                        prompt: prompt,
+                        date: Date.now()
+                    });
                 }
             } catch(e) {
                 alert("Connection failed");

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, send_from_directory
 import os
 import replicate
 import fal_client
@@ -7,7 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'super_secret_key_123') # Basic session security
+app.secret_key = os.getenv('SECRET_KEY', 'super_secret_key_123') 
+
+# Security Headers for Session
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# app.config['SESSION_COOKIE_SECURE'] = True # Uncomment in Production (HTTPS)
+
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 # 10MB Limit
 
 # Credits Config
@@ -151,6 +157,17 @@ def generate_video():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/<path:filename>')
+def serve_root_files(filename):
+    """
+    Serve verification files for Ad Networks (Monetag, Google AdSense) from the root directory.
+    This allows accessing http://localhost:5000/monetag-verification.html or /ads.txt
+    """
+    safe_files = ['ads.txt', 'robots.txt', 'sitemap.xml', 'sw.js', 'manifest.json']
+    if filename in safe_files or filename.startswith('monetag') or filename.endswith('.html'):
+        return send_from_directory('.', filename)
+    return "File not found", 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
