@@ -273,42 +273,26 @@
         <div class="logo">FARAH STUDIO</div>
         <div class="credits-display">
             <span style="color: var(--gold); font-weight: bold;">💎 <span id="credit-count">...</span></span> 
-            <button onclick="showRewardAd()" style="background:linear-gradient(90deg, var(--accent), var(--primary)); border:none; color:white; border-radius:15px; padding:6px 14px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:0.2s;">+ Free Credits</button>
+            <button onclick="startAdProcess()" style="background:linear-gradient(90deg, var(--accent), var(--primary)); border:none; color:white; border-radius:15px; padding:6px 14px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:0.2s;">+ Free Credits</button>
         </div>
     </nav>
     
-    <!-- Simulated Ad Overlay -->
-    <div id="simulated-ad" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:3000; background:rgba(0,0,0,0.98); display:none; justify-content:center; align-items:center; flex-direction:column;">
-        <div style="background:#000; color:white; padding:0; border-radius:10px; text-align:center; max-width:800px; width:90%; border: 2px solid #333; overflow:hidden; box-shadow:0 0 50px rgba(0,0,0,0.8); position:relative;">
-            <!-- Fake Video Player Header -->
-            <div style="background:#222; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:0.9rem; color:#aaa;">Sponsored Content</span>
-                <span style="font-size:0.9rem; color:#fff; font-weight:bold;">Ad ends in: <span id="ad-timer" style="color:var(--primary)">10</span>s</span>
-            </div>
+    <!-- Ad Verification Overlay -->
+    <div id="ad-verification-overlay" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:3000; background:rgba(0,0,0,0.95); display:none; justify-content:center; align-items:center; flex-direction:column;">
+        <div style="background:#1a1a2e; color:white; padding:40px; border-radius:20px; text-align:center; max-width:500px; border: 1px solid var(--primary); box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);">
+            <div style="font-size:3rem; margin-bottom:20px;">💎</div>
+            <h2 style="margin:0 0 10px 0;">Verifying Sponsor...</h2>
+            <p style="color:#aaa; margin-bottom:30px;">Please interact with the sponsor page that opened to verify your reward.</p>
             
-            <!-- Fake Video Content Area -->
-            <div style="height:400px; display:flex; align-items:center; justify-content:center; background: radial-gradient(circle, #2a2a2a, #000); position:relative;">
-                <div style="text-align:center;">
-                    <div style="font-size:4rem; margin-bottom:20px;">🎬</div>
-                    <h2 style="margin:0;">Amazing Product</h2>
-                    <p style="color:#888;">This is a placeholder for a real video ad.</p>
-                    <p style="color:#d4af37; font-size:0.8rem; margin-top:20px;">Refreshing the page will RESTART the ad!</p>
+            <div style="margin-bottom:20px;">
+                <div style="font-size:0.9rem; color:var(--primary); margin-bottom:5px;">Verification Status:</div>
+                <div class="loader-bar" style="width:100%; height:4px; background:#333; border-radius:2px; overflow:hidden;">
+                    <div id="verification-progress" style="width:0%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
                 </div>
-                
-                <!-- Progress Bar -->
-                <div style="position:absolute; bottom:0; left:0; width:100%; height:4px; background:#333;">
-                    <div id="ad-progress" style="width:0%; height:100%; background:var(--primary); transition:width 1s linear;"></div>
-                </div>
+                <div id="verification-text" style="font-size:0.8rem; color:#666; margin-top:5px;">Waiting for ad click...</div>
             </div>
 
-            <!-- CTA -->
-            <div style="padding:20px; background:#111; display:flex; justify-content:space-between; align-items:center;">
-                <div style="text-align:left;">
-                    <div style="font-weight:bold; font-size:1.1rem;">Support Farah Studio</div>
-                    <div style="font-size:0.8rem; color:#666;">Get free credits by watching this video.</div>
-                </div>
-                <button style="background:var(--primary); color:black; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:not-allowed; opacity:0.5;">Learn More</button>
-            </div>
+            <button id="claim-btn" disabled onclick="claimReward()" style="background:#333; color:#aaa; border:none; padding:15px 40px; border-radius:50px; font-weight:bold; cursor:not-allowed; transition:0.3s;">Claim 5 Credits</button>
         </div>
     </div>
 
@@ -399,49 +383,55 @@
         // Initialize credits on load
         updateCredits();
         
-        // --- Anti-Evasion Logic ---
-        window.addEventListener('load', () => {
-            if (localStorage.getItem('ad_active') === 'true') {
-                console.log("Ad evasion detected! Restarting ad...");
-                showRewardAd(true); // Restart with penalty
-            }
-        });
-
-        function showRewardAd(isRestart = false) {
-            // SIMULATED AD MODE
-            const adOverlay = document.getElementById('simulated-ad');
-            const timerEl = document.getElementById('ad-timer');
-            const progressEl = document.getElementById('ad-progress');
+        // --- Monetag Ad Logic ---
+        const DIRECT_LINK_URL = "https://otieu.com/4/10404920";
+        
+        function startAdProcess() {
+            // 1. Open Ad in New Tab
+            window.open(DIRECT_LINK_URL, '_blank');
             
-            // Set persistence flag
-            localStorage.setItem('ad_active', 'true');
+            // 2. Show Verification Overlay
+            const overlay = document.getElementById('ad-verification-overlay');
+            const progressEl = document.getElementById('verification-progress');
+            const textEl = document.getElementById('verification-text');
+            const btn = document.getElementById('claim-btn');
             
-            let timeLeft = 10; // 10 seconds duration
-            const totalTime = 10;
-            
-            adOverlay.style.display = 'flex';
-            timerEl.innerText = timeLeft;
+            overlay.style.display = 'flex';
             progressEl.style.width = '0%';
-            
-            if(isRestart) {
-                alert("Ad Interrupted! You must watch the full ad to get credits.");
-            }
+            btn.disabled = true;
+            btn.style.background = '#333';
+            btn.style.color = '#aaa';
+            btn.style.cursor = 'not-allowed';
 
+            // 3. Fake Verification Timer (10 seconds)
+            let progress = 0;
             const interval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
+                progress += 2;
+                progressEl.style.width = progress + '%';
                 
-                // Update progress bar
-                const percentage = ((totalTime - timeLeft) / totalTime) * 100;
-                progressEl.style.width = percentage + '%';
+                if(progress < 30) textEl.innerText = "Connecting to sponsor...";
+                else if(progress < 70) textEl.innerText = "Verifying view...";
+                else textEl.innerText = "Finalizing reward...";
 
-                if(timeLeft <= 0) {
+                if(progress >= 100) {
                     clearInterval(interval);
-                    adOverlay.style.display = 'none';
-                    localStorage.removeItem('ad_active'); // Clear flag
-                    adStatusCallback('ad-watched');
+                    textEl.innerText = "Verification Complete!";
+                    textEl.style.color = 'var(--primary)';
+                    
+                    // Enable Claim Button
+                    btn.disabled = false;
+                    btn.style.background = 'var(--primary)';
+                    btn.style.color = 'black';
+                    btn.style.cursor = 'pointer';
+                    btn.style.boxShadow = '0 0 20px var(--primary)';
                 }
-            }, 1000);
+            }, 200); // 10 seconds total (200ms * 50 steps)
+        }
+
+        function claimReward() {
+            const overlay = document.getElementById('ad-verification-overlay');
+            overlay.style.display = 'none';
+            adStatusCallback('ad-watched');
         }
 
         function adStatusCallback(status) {
