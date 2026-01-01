@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farah | AI Music & Video Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --primary: #d4af37; /* Gold */
+            --accent: #8a2be2;  /* Violet */
+            --text: #f0f0f0;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top left, #1a0b2e, var(--bg-dark));
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Navbar */
+        nav {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        /* Main Layout */
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin-top: 40px;
+            display: grid;
+            gap: 30px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Glass Cards */
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover { border-color: var(--primary); color: var(--text); }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #000;
+            border: none;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Inputs */
+        textarea, input[type="text"] {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            transition: 0.3s;
+        }
+
+        textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(138, 43, 226, 0.2); }
+        
+        .file-upload {
+            border: 2px dashed #444;
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .file-upload:hover { border-color: var(--primary); background: rgba(255,255,255,0.02); }
+
+        /* Action Button */
+        button.action-btn {
+            background: var(--text);
+            color: #000;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button.action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+
+        button.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Visualization & Results */
+        #result { display: none; margin-top: 30px; }
+        
+        #waveform {
+            width: 100%;
+            height: 128px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        video { width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        .mode-section { display: none; }
+        .mode-section.active { display: block; animation: slideUp 0.4s ease; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .footer { margin-top: auto; padding: 20px; color: #555; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">FARAH</div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="glass-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('create')">✨ Create</button>
+                <button class="tab-btn" onclick="switchTab('remix')">🎧 Remix</button>
+                <button class="tab-btn" onclick="switchTab('video')">🎬 Video</button>
+            </div>
+
+            <!-- CREATE -->
+            <div id="create-mode" class="mode-section active">
+                <textarea id="create-prompt" placeholder="Describe your dream sound... (e.g., 'Ethereal ambient soundscape with gentle piano')"></textarea>
+                <button class="action-btn" onclick="generateMusic('create')">Generate Symphony</button>
+            </div>
+
+            <!-- REMIX -->
+            <div id="remix-mode" class="mode-section">
+                <div class="file-upload" onclick="document.getElementById('remix-file').click()">
+                    <p>📂 Click to Upload Audio</p>
+                    <input type="file" id="remix-file" accept="audio/*" style="display:none" onchange="updateFileName(this)">
+                    <small id="remix-filename" style="color:var(--primary)"></small>
+                </div>
+                <textarea id="remix-prompt" placeholder="How should we transform this? (e.g., 'Make it lo-fi hip hop')"></textarea>
+                <button class="action-btn" onclick="generateMusic('remix')">Remix Track</button>
+            </div>
+
+            <!-- VIDEO -->
+            <div id="video-mode" class="mode-section">
+                <div class="file-upload" onclick="document.getElementById('video-audio-file').click()">
+                    <p>📂 Upload Song for Video</p>
+                    <input type="file" id="video-audio-file" accept="audio/*" style="display:none" onchange="updateFileName(this)">
+                    <small id="video-filename" style="color:var(--primary)"></small>
+                </div>
+                <textarea id="video-prompt" placeholder="Describe the visual vibe... (e.g., 'Golden particles floating in a void, 4k loop')"></textarea>
+                <button class="action-btn" onclick="generateVideo()">Generate Visuals</button>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="result" class="glass-panel">
+            <h3 style="margin-top:0">Your Masterpiece</h3>
+            
+            <!-- Waveform Container -->
+            <div id="waveform"></div>
+            
+            <!-- Media Container -->
+            <div id="media-container"></div>
+            
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                <button id="playBtn" class="tab-btn" onclick="togglePlay()">▶ Play</button>
+                <a id="downloadLink" href="#" class="tab-btn" download>⬇ Download</a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">Powered by Farah AI Engine</div>
+
+    <script>
+        let wavesurfer;
+
+        // Initialize WaveSurfer
+        function initWaveSurfer() {
+            if(wavesurfer) wavesurfer.destroy();
+            wavesurfer = WaveSurfer.create({
+                container: '#waveform',
+                waveColor: '#4a4a4a',
+                progressColor: '#d4af37',
+                cursorColor: '#8a2be2',
+                barWidth: 2,
+                barRadius: 3,
+                responsive: true,
+                height: 100,
+            });
+        }
+
+        function updateFileName(input) {
+            const span = input.nextElementSibling;
+            if(input.files.length > 0) span.innerText = "Selected: " + input.files[0].name;
+        }
+
+        function switchTab(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mode-section').forEach(s => s.classList.remove('active'));
+            
+            // Logic to find index based on buttons
+            const buttons = document.querySelectorAll('.tabs .tab-btn');
+            if(mode === 'create') buttons[0].classList.add('active');
+            if(mode === 'remix') buttons[1].classList.add('active');
+            if(mode === 'video') buttons[2].classList.add('active');
+
+            document.getElementById(mode + '-mode').classList.add('active');
+            document.getElementById('result').style.display = 'none';
+        }
+
+        async function generateMusic(mode) { handleGeneration(mode, false); }
+        async function generateVideo() { handleGeneration('video', true); }
+
+        async function handleGeneration(mode, isVideo) {
+            const btn = document.querySelector(`#${mode}-mode button`);
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "✨ Dreaming... (this takes time)";
+            
+            document.getElementById('result').style.display = 'none';
+
+            // Validation logic...
+            let prompt, bodyData, endpoint;
+            if (mode === 'create') {
+                prompt = document.getElementById('create-prompt').value;
+                if (!prompt) return alert("Please describe your song!");
+                endpoint = '/generate';
+                bodyData = JSON.stringify({ prompt: prompt });
+            } else if (mode === 'remix') {
+                prompt = document.getElementById('remix-prompt').value;
+                const file = document.getElementById('remix-file').files[0];
+                if (!prompt || !file) return alert("File and prompt required!");
+                endpoint = '/remix';
+                const fd = new FormData();
+                fd.append('audio', file);
+                fd.append('prompt', prompt);
+                bodyData = fd;
+            } else if (mode === 'video') {
+                prompt = document.getElementById('video-prompt').value;
+                const file = document.getElementById('video-audio-file').files[0];
+                if (!prompt || !file) return alert("File and prompt required!");
+                endpoint = '/video';
+                bodyData = JSON.stringify({ prompt: prompt });
+            }
+
+            try {
+                const headers = (mode === 'remix') ? {} : { 'Content-Type': 'application/json' };
+                const res = await fetch(endpoint, { method: 'POST', headers: headers, body: bodyData });
+                const data = await res.json();
+
+                if(data.error) {
+                    alert(data.error);
+                } else {
+                    // Success
+                    document.getElementById('result').style.display = 'block';
+                    initWaveSurfer();
+                    const container = document.getElementById('media-container');
+                    container.innerHTML = '';
+
+                    if(isVideo) {
+                        // Video Logic
+                        const video = document.createElement('video');
+                        video.src = data.video_url;
+                        video.loop = true;
+                        video.muted = true;
+                        
+                        // Audio Logic
+                        const audioFile = document.getElementById('video-audio-file').files[0];
+                        const audioUrl = URL.createObjectURL(audioFile);
+                        wavesurfer.load(audioUrl);
+                        
+                        // Sync
+                        wavesurfer.on('play', () => video.play());
+                        wavesurfer.on('pause', () => video.pause());
+                        
+                        container.appendChild(video);
+                        document.getElementById('downloadLink').href = data.video_url;
+                    } else {
+                        // Audio Logic
+                        wavesurfer.load(data.audio_url);
+                        document.getElementById('downloadLink').href = data.audio_url;
+                    }
+                }
+            } catch(e) {
+                alert("Connection failed");
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        function togglePlay() {
+            wavesurfer.playPause();
+            const btn = document.getElementById('playBtn');
+            btn.innerText = wavesurfer.isPlaying() ? "⏸ Pause" : "▶ Play";
+        }
+    </script>
+</body>
+</html>
